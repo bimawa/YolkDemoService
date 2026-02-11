@@ -6,18 +6,34 @@ Training project replicating the Yolk backend architecture: real-time AI rolepla
 
 ```mermaid
 graph TD
-    API["REST API<br/>(FastAPI)"] --> EV["Evaluation Engine"]
-    API --> RP["Roleplay Service"]
-    API --> ORC["Gap-to-Game<br/>Orchestrator"]
+    subgraph Entry["Entry Points"]
+        API["REST API<br/>(FastAPI)"]
+        WS["WebSocket<br/>Roleplay"]
+        MQ["RabbitMQ<br/>(FastStream)"]
+    end
 
-    WS["WebSocket<br/>Roleplay"] --> RP
-    MQ["RabbitMQ<br/>(FastStream)"] --> EV
+    subgraph Services["Service Layer"]
+        EV["Evaluation Engine"]
+        RP["Roleplay Service"]
+        ORC["Gap-to-Game<br/>Orchestrator"]
+    end
 
-    EV --> LLM["LLM Client<br/>(OpenAI / Anthropic)"]
-    RP --> SM["State Machine<br/>(7 Conv Phases)"]
+    subgraph Core["Core / Infrastructure"]
+        LLM["LLM Client<br/>(OpenAI / Anthropic)"]
+        SM["State Machine<br/>(7 Conv Phases)"]
+        DB[("PostgreSQL<br/>(SQLAlchemy 2.0 async)")]
+    end
+
+    API --> EV
+    API --> RP
+    API --> ORC
+    WS --> RP
+    MQ --> EV
+
+    EV --> LLM
+    EV --> DB
     RP --> LLM
-
-    EV --> DB["PostgreSQL<br/>(SQLAlchemy 2.0 async)"]
+    RP --> SM
     RP --> DB
     ORC --> DB
 ```
