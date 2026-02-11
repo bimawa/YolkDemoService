@@ -4,34 +4,22 @@ Training project replicating the Yolk backend architecture: real-time AI rolepla
 
 ## Architecture
 
-```
-┌───────────-──┐     ┌──────────────┐     ┌─────────────────┐
-│  REST API    │     │  WebSocket   │     │   RabbitMQ      │
-│  (FastAPI)   │     │  Roleplay    │     │   (FastStream)  │
-└──────┬───────┘     └──────┬───────┘     └──────┬──────────┘
-       │                    │                     │
-       ▼                    ▼                     ▼
-┌──────────────────────────────────────────────────────────┐
-│                   Service Layer                          │
-│  ┌────────-─────┐  ┌──────────────┐  ┌─────────────────┐ │
-│  │ Evaluation   │  │  Roleplay    │  │  Gap-to-Game    │ │
-│  │ Engine       │  │  Service     │  │  Orchestrator   │ │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬──────────┘ │
-│         │                 │                 │            │
-│         ▼                 ▼                 │            │
-│  ┌─────────────┐  ┌──────────────┐          │            │
-│  │ LLM Client  │  │State Machine │          │            │
-│  │ (OpenAI/    │  │(Conv Phases) │          │            │
-│  │  Anthropic) │  └──────────────┘          │            │
-│  └─────────────┘                            │            │
-└──────────────────────────────┬──────────────┘            │
-                               │                           │
-                               ▼                           │
-                    ┌─────────────────┐                    │
-                    │   PostgreSQL    │◄───────────────────┘
-                    │ (SQLAlchemy 2.0 │
-                    │     async)      │
-                    └─────────────────┘
+```mermaid
+graph TD
+    API["REST API<br/>(FastAPI)"] --> EV["Evaluation Engine"]
+    API --> RP["Roleplay Service"]
+    API --> ORC["Gap-to-Game<br/>Orchestrator"]
+
+    WS["WebSocket<br/>Roleplay"] --> RP
+    MQ["RabbitMQ<br/>(FastStream)"] --> EV
+
+    EV --> LLM["LLM Client<br/>(OpenAI / Anthropic)"]
+    RP --> SM["State Machine<br/>(7 Conv Phases)"]
+    RP --> LLM
+
+    EV --> DB["PostgreSQL<br/>(SQLAlchemy 2.0 async)"]
+    RP --> DB
+    ORC --> DB
 ```
 
 ## Key Components
